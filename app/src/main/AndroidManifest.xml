@@ -13,11 +13,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CountingApp"
         tools:targetApi="31">
-        <activity android:name=".MainActivity"></activity>
-        <activity android:name=".splash"
+        <service
+            android:name=".MyService"
+            android:enabled="true"
+            android:exported="true"></service>
+
+        <activity android:name=".MainActivity" />
+        <activity
+            android:name=".splash"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.ACTION_START_COUNTING"/>
+                <action android:name="android.intent.action.ACTION_STOP_COUNTING"/>
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
