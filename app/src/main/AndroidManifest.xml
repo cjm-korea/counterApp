@@ -24,8 +24,6 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <action android:name="android.intent.action.ACTION_START_COUNTING"/>
-                <action android:name="android.intent.action.ACTION_STOP_COUNTING"/>
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>

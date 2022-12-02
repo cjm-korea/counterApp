@@ -48,10 +48,10 @@ public class MyService extends Service {
                 sThread.start();
             }
         }else{
-            if(!Thread.currentThread().isInterrupted() || Thread.currentThread().isAlive()){
-                sThread.interrupt();
-                sThread = null;
-            }
+            // When name is null
+//            if(!Thread.currentThread().isInterrupted() || Thread.currentThread().isAlive()){
+            isService = false;
+//            }
         }
         return super.onStartCommand(intent, flags, startId);
     }

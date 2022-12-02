@@ -19,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
     RadioGroup radioGroup;
     EditText editText;
     boolean isService = false;
+    boolean isCnt = false;
     // endregion
 
     @Override
@@ -66,11 +67,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if(isService){
-                    cThread = new Thread(new CounterThread());
-                    if(cThread.isInterrupted() || cThread.isAlive()){
+                    if(isCnt){
                         cThread.interrupt();
                         cThread = null;
                     }
+                    isCnt = true;
+                    cThread = new Thread(new CounterThread());
                     cThread.start();
                 }
             }
@@ -79,7 +81,8 @@ public class MainActivity extends AppCompatActivity {
         btnCountOff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(cThread != null && cThread.isAlive()){
+                if(isCnt == true){
+                    Log.d(intervalServiceTAG, "Stop Count");
                     cThread.interrupt();
                     cThread = null;
                 }
@@ -88,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         // endregion
     }
 
-    private void putIntent(Intent sintent) {
+    private void putIntent(Intent intent) {
         sintent.putExtra("name", editText.getText().toString());
         sintent.putExtra("radioNum", getRadioNum());
     }
@@ -115,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
                 while(isService)
                     try {
                         Thread.sleep(interval);
-                        Log.d(intervalServiceTAG, "Counter = " + cnt + ", Interval = " + interval + "ms");
+                        Log.d(intervalServiceTAG, "Count = " + cnt + ", Interval = " + interval + "ms");
                         cnt++;
                     } catch (InterruptedException e) {
                         e.printStackTrace();
