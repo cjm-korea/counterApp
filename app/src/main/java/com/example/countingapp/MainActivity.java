@@ -2,6 +2,7 @@ package com.example.countingapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -12,16 +13,14 @@ import android.widget.RadioGroup;
 
 public class MainActivity extends AppCompatActivity {
     // region initial
+    final String intervalServiceTAG = "IntervalService";
+    Intent sintent;
+    Thread cThread = null;
     RadioGroup radioGroup;
     EditText editText;
-    final String intervalServiceTAG = "IntervalService";
-    Thread serviceThread = new Thread(new ServiceThread());
-    Thread cntThread = new Thread(new CounterThread());
-    Boolean serviceState = false;
-    Boolean cntState = false;
-    Boolean processState = false;
+    boolean isService = false;
+    boolean isCnt = false;
     // endregion
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,32 +40,16 @@ public class MainActivity extends AppCompatActivity {
         btnServiceOn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (editText.getText().toString().equals("")) {
+                if(isService) {
+                    stopService(new Intent(getApplicationContext(), MyService.class));
+                    putIntent(sintent);
+                    startService(sintent);
+                }else{
+                    isService = true;
                     Log.d(intervalServiceTAG, "Start Service");
-                    processState = true;
-                    serviceState = false;
-                    serviceThread.interrupt();
-                    serviceState = true;
-                } else {
-                    Log.d(intervalServiceTAG, "Start Service");
-//                    If initial state -> new Thread(new ServiceThread()) is can't resume Thread
-//                    This state is thread.state == null, so nullPointerException
-//                    if(serviceThread.isAlive() || serviceThread.isInterrupted()){
-//                        serviceThread.interrupt();
-//                        serviceThread = null;
-//                        serviceThread = new Thread(new ServiceThread());
-//                    }
-//                    Finally there are runnable thread is stacked?
-//                    Not Flag, use isInterrupt or isAlive => It's not Work!
-//                    나는 뭣도 아니지만 improve is need to .isAlive, .isInterrupt for state check
-                    if (serviceState) {
-                        serviceThread.interrupt();
-                        serviceThread = null;
-                        serviceThread = new Thread(new ServiceThread());
-                    }
-                    processState = true;
-                    serviceState = true;
-                    serviceThread.start();
+                    sintent = new Intent(getApplicationContext(), MyService.class);
+                    putIntent(sintent);
+                    startService(sintent);
                 }
             }
         });
@@ -74,39 +57,43 @@ public class MainActivity extends AppCompatActivity {
         btnServiceOff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                processState = false;
-                serviceState = false;
+                isService = false;
                 Log.d(intervalServiceTAG, "Stop Service");
-                serviceThread.interrupt();
-//                Actually it need to readyState when btnOn is clicked, check for new initial thread
-                serviceState = true;
+                stopService(new Intent(getApplicationContext(), MyService.class));
             }
         });
 
         btnCountOn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(processState){
-                    if (cntState) {
-                        cntThread.interrupt();
-                        cntThread = null;
-                        cntThread = new Thread(new CounterThread());
+                if(isService){
+                    if(isCnt){
+                        cThread.interrupt();
+                        cThread = null;
                     }
-                    cntState = true;
-                    cntThread.start();
+                    isCnt = true;
+                    cThread = new Thread(new CounterThread());
+                    cThread.start();
                 }
             }
         });
-
+//
         btnCountOff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cntState = false;
-                cntThread.interrupt();
-                cntState = true;
+                if(isCnt == true){
+                    Log.d(intervalServiceTAG, "Stop Count");
+                    cThread.interrupt();
+                    cThread = null;
+                }
             }
         });
         // endregion
+    }
+
+    private void putIntent(Intent intent) {
+        sintent.putExtra("name", editText.getText().toString());
+        sintent.putExtra("radioNum", getRadioNum());
     }
 
     private int getRadioNum() {
@@ -121,46 +108,25 @@ public class MainActivity extends AppCompatActivity {
                 return 1000;
         }
     }
-
     // region ThreadClass
-    public class ServiceThread implements Runnable {
-        @Override
-        public void run() {
-            int interval = getRadioNum();
-            String name = editText.getText().toString();
-            while (true) {
-//                Flag for check state
-                while (serviceState) {
-                    try {
-                        Thread.sleep(interval);
-                        Log.d(intervalServiceTAG, "Content = " + name + ", Interval = " + interval + "ms");
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        return;
-                    }
-                }
-            }
-        }
-    }
-
     public class CounterThread implements Runnable {
         @Override
         public void run() {
             int cnt = 0;
             int interval = getRadioNum();
             while (true) {
-                while (cntState && processState) {
+                while(isService)
                     try {
                         Thread.sleep(interval);
-                        Log.d(intervalServiceTAG, "Counter = " + cnt + ", Interval = " + interval + "ms");
+                        Log.d(intervalServiceTAG, "Count = " + cnt + ", Interval = " + interval + "ms");
                         cnt++;
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                         return;
                     }
-                }
             }
         }
     }
     // endregion
+
 }

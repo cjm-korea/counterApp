@@ -3,14 +3,14 @@
 ## Assignment 2
 
 ### goal
-Make threads and control each state of threads 
+Make Service && Thread and control each
 
 ### problem
 I need to stop & resume thread using .interrupt() method
 but .interrupt() is not thread state reset
-and when I restart .start() method there are problem with IllegalThreadStateException
+when I restart .start() method there are problem with IllegalThreadStateException
 
-So I need make flag for stop running Thread,
+So I need make flag for stop running Thread on while loop,
 and when restart button is clicked make new Thread instance
 
 ### additional function(Splash Page)
