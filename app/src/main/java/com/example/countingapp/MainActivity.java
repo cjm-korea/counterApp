@@ -15,7 +15,7 @@ public class MainActivity extends AppCompatActivity {
     // region initial
     final String intervalServiceTAG = "IntervalService";
     Intent sintent;
-    Intent cintent = new Intent();
+    Thread cThread = null;
     RadioGroup radioGroup;
     EditText editText;
     boolean isService = false;
@@ -41,12 +41,15 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if(isService) {
                     stopService(new Intent(getApplicationContext(), MyService.class));
+                    putIntent(sintent);
+                    startService(sintent);
+                }else{
+                    isService = true;
+                    Log.d(intervalServiceTAG, "Start Service");
+                    sintent = new Intent(getApplicationContext(), MyService.class);
+                    putIntent(sintent);
                     startService(sintent);
                 }
-                isService = true;
-                Log.d(intervalServiceTAG, "Start Service");
-                sintent = new Intent(getApplicationContext(), MyService.class);
-                putIntent(sintent);
             }
         });
 
@@ -63,7 +66,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if(isService){
-                    cintent.setAction(MyService.ACTION_START_COUNTING);
+                    cThread = new Thread(new CounterThread());
+                    if(cThread.isInterrupted() || cThread.isAlive()){
+                        cThread.interrupt();
+                        cThread = null;
+                    }
+                    cThread.start();
                 }
             }
         });
@@ -71,7 +79,10 @@ public class MainActivity extends AppCompatActivity {
         btnCountOff.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                    cintent.setAction(MyService.ACTION_STOP_COUNTING);
+                if(cThread != null && cThread.isAlive()){
+                    cThread.interrupt();
+                    cThread = null;
+                }
             }
         });
         // endregion
@@ -94,6 +105,25 @@ public class MainActivity extends AppCompatActivity {
                 return 1000;
         }
     }
-
+    // region ThreadClass
+    public class CounterThread implements Runnable {
+        @Override
+        public void run() {
+            int cnt = 0;
+            int interval = getRadioNum();
+            while (true) {
+                while(isService)
+                    try {
+                        Thread.sleep(interval);
+                        Log.d(intervalServiceTAG, "Counter = " + cnt + ", Interval = " + interval + "ms");
+                        cnt++;
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        return;
+                    }
+            }
+        }
+    }
+    // endregion
 
 }
